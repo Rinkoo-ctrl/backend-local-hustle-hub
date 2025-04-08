@@ -37,7 +37,7 @@ exports.login = async (req, res) => {
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
         const freelancerProfile = await Freelancer.findOne({ userId: user._id });
-        console.log(freelancerProfile)
+      
         res.json({
             token, user: {
                 id: user._id, name: user.name, email, isFreelancer: !!freelancerProfile,

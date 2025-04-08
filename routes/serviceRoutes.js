@@ -5,7 +5,7 @@ const authenticateToken = require('../middleware/authMiddleware');
 
 router.post('/', authenticateToken, serviceController.createService);
 router.get('/', authenticateToken, serviceController.getAllServices);
-router.put('/:id', serviceController.updateService);
-router.delete('/:id', serviceController.deleteService);
+router.put('/:id', authenticateToken, serviceController.updateService);
+router.delete('/:id', authenticateToken, serviceController.deleteService);
 
 module.exports = router;
