@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Freelancer = require('../models/Freelancer');
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -35,7 +36,14 @@ exports.login = async (req, res) => {
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-        res.json({ token, user: { id: user._id, name: user.name, email } });
+        const freelancerProfile = await Freelancer.findOne({ userId: user._id });
+      
+        res.json({
+            token, user: {
+                id: user._id, name: user.name, email, isFreelancer: !!freelancerProfile,
+                freelancerProfile: freelancerProfile || null
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: "Server Error" });
     }

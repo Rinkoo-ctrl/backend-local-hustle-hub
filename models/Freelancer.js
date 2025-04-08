@@ -6,10 +6,7 @@ const FreelancerSchema = new mongoose.Schema({
     bio: String,
     skills: [String],
     location: String,
-    images: {
-        type: [String],
-        default: ['https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/626fd8140423801.6241b91e24d9c.png']
-    }
+    image: String
 });
 
 module.exports = mongoose.model('Freelancer', FreelancerSchema);
