@@ -2,6 +2,7 @@ const Freelancer = require('../models/Freelancer');
 
 exports.createOrUpdateFreelancer = async (req, res) => {
     const { name, bio, skills, location, images } = req.body;
+    
     try {
         const userId = req.user.id;
         const profile = await Freelancer.findOneAndUpdate(

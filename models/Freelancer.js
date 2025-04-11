@@ -5,8 +5,26 @@ const FreelancerSchema = new mongoose.Schema({
     name: String,
     bio: String,
     skills: [String],
-    location: String,
-    image: String
+    image: String,
+    locations: [
+        {
+            type: {
+                type: String,
+                enum: ["Point"],
+                default: "Point"
+            },
+            coordinates: {
+                type: [Number], // [longitude, latitude]
+                required: true
+            },
+            address: {
+                type: String,
+                required: true
+            }
+        }
+    ]
 });
+
+FreelancerSchema.index({ "locations": "2dsphere" });
 
 module.exports = mongoose.model('Freelancer', FreelancerSchema);
