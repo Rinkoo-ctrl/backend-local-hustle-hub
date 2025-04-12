@@ -27,8 +27,17 @@ exports.createOrUpdateFreelancer = async (req, res) => {
             profile.bio = bio;
             profile.skills = skills;
 
-            // Push each location to existing locations
-            profile.locations.push(...validLocations);
+            const newUniqueLocations = validLocations.filter((newLoc) => {
+                return !profile.locations.some((existingLoc) =>
+                    existingLoc.address === newLoc.address &&
+                    existingLoc.latitude === newLoc.latitude &&
+                    existingLoc.longitude === newLoc.longitude
+                );
+            });
+
+            
+            profile.locations.push(...newUniqueLocations);
+
             await profile.save();
         } else {
             // Create new profile
