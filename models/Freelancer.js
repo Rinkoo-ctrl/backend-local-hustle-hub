@@ -5,14 +5,13 @@ const freelancerSchema = new mongoose.Schema({
     name: String,
     bio: String,
     skills: [String],
-    address: { type: String, required: true },
-    latitude: {
-        type: Number, required: true
-    },
-    longitude: {
-        type: Number, required: true
-    }
+    locations: [
+        {
+            address: { type: String, required: true },
+            latitude: { type: Number, required: true },
+            longitude: { type: Number, required: true }
+        }
+    ]
 });
-
 
 module.exports = mongoose.model('Freelancer', freelancerSchema);
