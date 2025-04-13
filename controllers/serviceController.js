@@ -13,7 +13,11 @@ exports.createService = async (req, res) => {
 
 exports.getAllServices = async (req, res) => {
     try {
-        const services = await Service.find().populate('freelancerId', 'name location');
+        const freelancerId = req.params.freelancerId;
+
+        const services = await Service.find({ freelancerId: freelancerId })
+            .populate('freelancerId', 'name locations');
+
         res.json(services);
     } catch (err) {
         res.status(500).json({ message: 'Error fetching services', error: err });
