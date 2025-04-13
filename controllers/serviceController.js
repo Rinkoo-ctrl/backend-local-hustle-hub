@@ -48,41 +48,60 @@ exports.deleteService = async (req, res) => {
 
 exports.getServicesByLocation = async (req, res) => {
     const { lat, lng, category } = req.query;
+
     if (!lat || !lng) {
         return res.status(400).json({ error: "Latitude and longitude are required" });
     }
-    console.log(req.query)
 
     const userLat = parseFloat(lat);
     const userLng = parseFloat(lng);
+
     try {
         // Fetch all freelancers
         const freelancers = await Freelancer.find();
 
-        // Filter freelancers that have at least one location within a 10 km radius
-        const nearbyFreelancers = freelancers.filter(freelancer => {
-            return freelancer.locations.some(loc => {
-                // Calculate distance using the haversine formula
-                const distance = getDistanceFromLatLonInKm(userLat, userLng, loc.latitude, loc.longitude);
-                console.log(distance,freelancer.name)
-                return distance <= process.env.VICINITY_DISTANCE; // within 10 km
-            });
+        // Find freelancers within VICINITY_DISTANCE (e.g., 10 km)
+        const nearbyFreelancersWithDistance = freelancers.map(freelancer => {
+            const distances = freelancer.locations.map(loc =>
+                getDistanceFromLatLonInKm(userLat, userLng, loc.latitude, loc.longitude)
+            );
+            console.log(distances, "--->")
+            const minDistance = Math.min(...distances);
+            return {
+                freelancer,
+                distance: minDistance
+            };
+        }).filter(({ distance }) => distance <= parseFloat(process.env.VICINITY_DISTANCE || 10));
+        console.log(nearbyFreelancersWithDistance, "--->")
+        // Map freelancerId to distance
+        const freelancerDistanceMap = {};
+        nearbyFreelancersWithDistance.forEach(({ freelancer, distance }) => {
+            freelancerDistanceMap[freelancer._id.toString()] = distance;
         });
+        console.log(freelancerDistanceMap, "--->")
 
-        // Get the IDs of the nearby freelancers
-        const freelancerIds = nearbyFreelancers.map(f => f._id);
-
-        // Build the service query with an optional category filter
+        // Get service query
+        const freelancerIds = Object.keys(freelancerDistanceMap);
         let serviceQuery = { freelancerId: { $in: freelancerIds } };
         if (category) {
             serviceQuery.category = category;
         }
 
-        // Get services matching those freelancer IDs
+        // Fetch services
         const services = await Service.find(serviceQuery)
             .populate('freelancerId', 'name locations');
 
-        res.json(services);
+        // Attach distance to each service
+        const servicesWithDistance = services.map(service => {
+            const distance = freelancerDistanceMap[service.freelancerId._id.toString()];
+            return {
+                ...service.toObject(), // convert Mongoose doc to plain object
+                distance: Number(distance.toFixed(2)) // round to 2 decimal
+            };
+        });
+
+
+        res.json(servicesWithDistance);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Error fetching services by location', error: err });
