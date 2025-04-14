@@ -108,4 +108,16 @@ exports.getServicesByLocation = async (req, res) => {
     }
 };
 
-
+exports.getServiceById = async (req, res) => {
+    try {
+        const service = await Service.findById(req.params.id);
+        if (!service) {
+            return res.status(404).json({ message: "Service not found" });
+        }
+        console.log(service);
+        res.status(200).json(service);
+    } catch (err) {
+        console.error("Error fetching service by ID:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
