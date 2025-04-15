@@ -15,5 +15,7 @@ app.use('/api/freelancers', require('./routes/freelancerRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes.js'));
 app.use('/api/bookings', require('./routes/bookingRoutes.js'));
 app.use("/api/webhook", express.raw({ type: "application/json" }));
+app.use("/api/reviews", require("./routes/reviewRoutes"));
+
 
 app.listen(5000, () => console.log("Server running on port 5000"));
