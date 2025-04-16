@@ -110,7 +110,7 @@ exports.getServicesByLocation = async (req, res) => {
 
 exports.getServiceById = async (req, res) => {
     try {
-        const service = await Service.findById(req.params.id);
+        const service = await Service.findById(req.params.id).populate('freelancerId', 'name bio skills image locations');
         if (!service) {
             return res.status(404).json({ message: "Service not found" });
         }
