@@ -3,6 +3,7 @@ const router = express.Router();
 const serviceController = require('../controllers/serviceController.js');
 const authenticateToken = require('../middleware/authMiddleware');
 
+router.get('/', authenticateToken, serviceController.getAllServicesGlobal);
 router.post('/', authenticateToken, serviceController.createService);
 router.get('/by-location', authenticateToken, serviceController.getServicesByLocation);
 router.get('/service-by-id/:id', authenticateToken, serviceController.getServiceById);

@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Freelancer = require('../models/Freelancer');
+const Customer = require('../models/Customer')
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -28,7 +29,6 @@ exports.login = async (req, res) => {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email });
-
         if (!user) return res.status(400).json({ message: "Invalid credentials!!!" });
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -36,15 +36,40 @@ exports.login = async (req, res) => {
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-        const freelancerProfile = await Freelancer.findOne({ userId: user._id });
+        if (user.role === 'freelancer') {
+            const freelancerProfile = await Freelancer.findOne({ userId: user._id });
 
-        res.json({
-            token, user: {
-                id: user._id, email, isFreelancer: !!freelancerProfile, role: user.role,
-                freelancerProfile: freelancerProfile || null
-            }
-        });
+            return res.json({
+                token,
+                user: {
+                    id: user._id,
+                    email,
+                    isFreelancer: !!freelancerProfile,
+                    role: user.role,
+                    freelancerProfile: freelancerProfile || null
+                }
+            });
+
+        } else if (user.role === 'customer') {
+            const customerProfile = await Customer.findOne({ userId: user._id });
+
+            return res.json({
+                token,
+                user: {
+                    id: user._id,
+                    email,
+                    isCustomer: !!customerProfile,
+                    role: user.role,
+                    customerProfile: customerProfile || null
+                }
+            });
+        } else {
+            return res.status(400).json({ message: "Invalid role!" });
+        }
+
     } catch (error) {
+        console.error("Login error:", error);
         res.status(500).json({ message: "Server Error" });
     }
 };
+

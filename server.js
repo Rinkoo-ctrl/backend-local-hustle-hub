@@ -8,14 +8,16 @@ connectDB();
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use('/api/freelancers', require('./routes/freelancerRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes.js'));
 app.use('/api/bookings', require('./routes/bookingRoutes.js'));
-app.use("/api/webhook", express.raw({ type: "application/json" }));
 app.use("/api/reviews", require("./routes/reviewRoutes"));
+app.use("/api/customers", require("./routes/customerRoutes.js"));
+
 
 
 app.listen(5000, () => console.log("Server running on port 5000"));

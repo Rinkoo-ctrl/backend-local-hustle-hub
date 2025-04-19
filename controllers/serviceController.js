@@ -121,3 +121,80 @@ exports.getServiceById = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+exports.getAllServicesGlobal = async (req, res) => {
+    try {
+        const { category, lat, lng, page = 1, limit = 10, search } = req.query;
+        console.log(req.query);
+
+        if (!lat || !lng) {
+            return res.status(400).json({ message: "Latitude and Longitude are required" });
+        }
+
+        const userLat = parseFloat(lat);
+        const userLng = parseFloat(lng);
+
+        const filter = {};
+
+        // ✅ Handle multiple categories
+        if (category) {
+            if (Array.isArray(category)) {
+                filter.category = { $in: category };
+            } else if (typeof category === 'string') {
+                const categoryArray = category.split(',');
+                filter.category = { $in: categoryArray };
+            }
+        }
+
+        // ✅ Add search (on category & description)
+        if (search) {
+            const searchRegex = new RegExp(search, 'i'); // case-insensitive
+            filter.$or = [
+                { category: searchRegex },
+                { description: searchRegex }
+            ];
+        }
+
+        console.log(filter, "filterrrrr");
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const allServices = await Service.find(filter)
+            .populate('freelancerId', 'name image locations')
+            .lean();
+
+        const totalCount = allServices.length;
+
+        const servicesWithDistance = allServices.map(service => {
+            const freelancerLocations = service.freelancerId?.locations || [];
+
+            const distances = freelancerLocations.map(loc =>
+                getDistanceFromLatLonInKm(userLat, userLng, loc.latitude, loc.longitude)
+            );
+
+            const minDistance = distances.length ? Math.min(...distances) : Infinity;
+
+            return {
+                ...service,
+                distance: Number(minDistance.toFixed(2))
+            };
+        });
+
+        // Sort by distance
+        const sorted = servicesWithDistance.sort((a, b) => a.distance - b.distance);
+
+        // Paginate after sorting
+        const paginated = sorted.slice(skip, skip + parseInt(limit));
+
+        res.status(200).json({
+            services: paginated,
+            totalPages: Math.ceil(totalCount / limit),
+            currentPage: parseInt(page),
+            totalCount
+        });
+
+    } catch (err) {
+        console.error("Service Fetch Error:", err);
+        res.status(500).json({ message: 'Error fetching services', error: err });
+    }
+};
