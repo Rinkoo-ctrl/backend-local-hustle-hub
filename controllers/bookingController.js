@@ -71,3 +71,18 @@ exports.verifyPayment = async (req, res) => {
         res.status(500).json({ error: "Payment verification failed", details: error });
     }
 };
+
+exports.getUserBookings = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const bookings = await Booking.find({ userId }) 
+            .populate("serviceId")
+            .sort({ createdAt: -1 });
+           
+        res.status(200).json({ success: true, bookings });
+    } catch (error) {
+        console.error("Error fetching bookings:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch bookings" });
+    }
+};
