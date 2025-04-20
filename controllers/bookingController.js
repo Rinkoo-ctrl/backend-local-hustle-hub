@@ -60,9 +60,10 @@ exports.verifyPayment = async (req, res) => {
         if (sign === razorpay_signature) {
             await Booking.findByIdAndUpdate(bookingId, {
                 paymentStatus: "paid",
-                status: "confirmed",
+                status: "active",
                 paymentId: razorpay_payment_id
-            });
+            },
+                { runValidators: true });
             res.json({ success: true });  // Fixed: return success true
         } else {
             res.status(400).json({ success: false, message: "Invalid signature" });
@@ -76,13 +77,25 @@ exports.getUserBookings = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const bookings = await Booking.find({ userId }) 
+        const bookings = await Booking.find({ userId })
             .populate("serviceId")
             .sort({ createdAt: -1 });
-           
+
         res.status(200).json({ success: true, bookings });
     } catch (error) {
         console.error("Error fetching bookings:", error);
         res.status(500).json({ success: false, message: "Failed to fetch bookings" });
+    }
+};
+
+exports.getActiveBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find({
+            freelancerId: req.user.id,
+            status: "active",
+        }).populate("customerId serviceId");
+        res.json({ bookings });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
     }
 };
