@@ -4,7 +4,8 @@ const {
     createRazorpayOrder,
     verifyPayment,
     getUserBookings,
-    getActiveBookings
+    getActiveBookings,
+    markOrderComplete
 } = require("../controllers/bookingController.js");
 const authenticateToken = require('../middleware/authMiddleware');
 
@@ -15,4 +16,6 @@ router.get("/my-bookings", authenticateToken, getUserBookings);
 router.post("/create-razorpay-order", authenticateToken, createRazorpayOrder);
 router.post("/verify-payment", authenticateToken, verifyPayment);
 router.get("/freelancer-active", authenticateToken, getActiveBookings);
+router.patch("/mark-complete/:id", authenticateToken, markOrderComplete);
+
 module.exports = router;

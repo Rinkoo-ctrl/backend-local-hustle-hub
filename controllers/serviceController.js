@@ -5,6 +5,7 @@ const { getDistanceFromLatLonInKm } = require('../utils/distanceCalculator.js');
 
 exports.createService = async (req, res) => {
     const { freelancerId, title, description, price, category } = req.body;
+    console.log(req.body, "--->")
     try {
         const service = new Service({ freelancerId, title, description, price, category });
         await service.save();

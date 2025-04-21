@@ -1,6 +1,8 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const Booking = require("../models/Booking");
+const Freelancer = require("../models/Freelancer");
+const Customer = require("../models/Customer");
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -90,12 +92,51 @@ exports.getUserBookings = async (req, res) => {
 
 exports.getActiveBookings = async (req, res) => {
     try {
+        // 1️⃣ find the freelancer record by the logged‑in user
+        const userId = req.user.id;
+        const freelancer = await Freelancer.findOne({ userId });
+        if (!freelancer) {
+            return res.status(404).json({ message: "Freelancer not found" });
+        }
+
+        // 2️⃣ get all non-completed bookings for that freelancer
         const bookings = await Booking.find({
-            freelancerId: req.user.id,
-            status: "active",
-        }).populate("customerId serviceId");
-        res.json({ bookings });
+            freelancerId: freelancer._id,
+            status: { $ne: "completed" },
+        })
+            .populate("serviceId")  // pull in the service details
+            .lean();                // so we can mutate each doc
+
+        // 3️⃣ for each booking, fetch the corresponding Customer profile
+        const bookingsWithCustomer = await Promise.all(
+            bookings.map(async (b) => {
+                const customerProfile = await Customer.findOne({ userId: b.userId }).lean();
+                return {
+                    ...b,
+                    customer: customerProfile || null,
+                };
+            })
+        );
+
+        // 4️⃣ send them back
+        res.json({ bookings: bookingsWithCustomer });
     } catch (err) {
+        console.error("Error in getActiveBookings:", err);
         res.status(500).json({ message: "Server error" });
+    }
+};
+
+exports.markOrderComplete = async (req, res) => {
+    try {
+        const booking = await Booking.findById(req.params.id);
+        if (!booking) return res.status(404).json({ message: "Order not found" });
+
+        booking.status = "completed";
+        await booking.save();
+
+        res.json({ success: true, message: "Order marked as completed" });
+    } catch (err) {
+        console.error("Error marking order complete:", err);
+        res.status(500).json({ success: false, message: "Server Error" });
     }
 };
