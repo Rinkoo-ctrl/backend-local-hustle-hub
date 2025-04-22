@@ -102,7 +102,7 @@ exports.getActiveBookings = async (req, res) => {
         // 2️⃣ get all non-completed bookings for that freelancer
         const bookings = await Booking.find({
             freelancerId: freelancer._id,
-            status: { $ne: "completed" },
+            status: "active",
         })
             .populate("serviceId")  // pull in the service details
             .lean();                // so we can mutate each doc
@@ -128,9 +128,10 @@ exports.getActiveBookings = async (req, res) => {
 
 exports.markOrderComplete = async (req, res) => {
     try {
+        console.log(req.params.id, "------->")
         const booking = await Booking.findById(req.params.id);
         if (!booking) return res.status(404).json({ message: "Order not found" });
-
+        console.log(booking, "booking")
         booking.status = "completed";
         await booking.save();
 
