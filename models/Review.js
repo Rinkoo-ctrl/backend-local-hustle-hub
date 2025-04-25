@@ -8,7 +8,7 @@ const reviewSchema = new mongoose.Schema({
     },
     freelancerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Freelancer",
         required: true,
     },
     userId: {

@@ -141,3 +141,22 @@ exports.markOrderComplete = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
+exports.getCompletedBookings = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const completedBookings = await Booking.find({
+            userId,
+            status: "completed"
+        })
+            .populate("freelancerId", "name")
+            .populate("serviceId", "title")
+            .sort({ updatedAt: -1 });
+
+        res.status(200).json({ success: true, bookings: completedBookings });
+    } catch (error) {
+        console.error("Error getting completed bookings:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch completed bookings" });
+    }
+};
